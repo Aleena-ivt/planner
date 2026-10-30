@@ -1,14 +1,17 @@
-from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from models.events import Event
+from sqlmodel import SQLModel, Field, Relationship
+from pydantic import EmailStr, BaseModel
 
-class User(BaseModel):
-    email: EmailStr
+
+class User(SQLModel, table=True):
+    email: EmailStr = Field(primary_key=True)
     password: str
-    events: Optional[List[Event]] = []
+
+    # Связь с событиями (один ко многим)
+    events: List["Event"] = Relationship(back_populates="owner")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "user@Aleena.com",
                 "password": "password123",
@@ -16,9 +19,14 @@ class User(BaseModel):
             }
         }
 
-class NewUser(User):
-    pass
 
+# Класс для регистрации (без базы данных)
+class NewUser(BaseModel):
+    email: EmailStr
+    password: str
+
+
+# Класс для входа (без базы данных)
 class UserSignIn(BaseModel):
     email: EmailStr
     password: str
